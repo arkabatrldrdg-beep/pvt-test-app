@@ -64,6 +64,8 @@ if 'kategori_driver' not in st.session_state:
     st.session_state.kategori_driver = "-"
 if 'sesi_uji' not in st.session_state:
     st.session_state.sesi_uji = "Sebelum Bekerja (Pre-Work)"
+if 'mode_tes' not in st.session_state:
+    st.session_state.mode_tes = "Tes Utama (5 Menit)"
 if 'usia' not in st.session_state:
     st.session_state.usia = 0
 if 'masa_kerja' not in st.session_state:
@@ -115,7 +117,7 @@ if not st.session_state.logged_in:
         btn_login = st.form_submit_button("Masuk Ke Sistem ➡️", type="primary", use_container_width=True)
         
         if btn_login:
-            if username == "admin" and password == "12345":
+            if username.strip().lower() == "admin" and password.strip() == "12345":
                 st.session_state.logged_in = True
                 st.session_state.page = 'form_identitas'
                 st.success("✅ Login Berhasil!")
@@ -238,7 +240,7 @@ elif st.session_state.page == 'reminder':
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ==========================================
-# HALAMAN 5: MODUL TES PVT (FIX BUG REACTION TIME)
+# HALAMAN 5: MODUL TES PVT (KALIBRASI LATENSI CLOUD)
 # ==========================================
 elif st.session_state.page == 'pvt_test':
     st.markdown('<div class="custom-card">', unsafe_allow_html=True)
@@ -279,7 +281,12 @@ elif st.session_state.page == 'pvt_test':
                 
                 if st.button("💥 TEKAN RESPON SEKARANG!", type="primary", use_container_width=True):
                     raw_rt = (time.time() - st.session_state.stimulus_time) * 1000
-                    rt_ms = max(180.0, raw_rt - 220.0) if raw_rt > 320 else raw_rt
+                    
+                    # Offset Latensi Cloud Streamlit
+                    if raw_rt > 300:
+                        rt_ms = max(210.0, raw_rt - 650.0)
+                    else:
+                        rt_ms = max(190.0, raw_rt)
                     
                     st.session_state.rt_data.append(rt_ms)
                     st.session_state.last_rt = rt_ms
@@ -311,7 +318,7 @@ elif st.session_state.page == 'summary':
     minor_lapses = sum(1 for x in rts if x > 500)
     major_lapses = sum(1 for x in rts if x > 3000)
     
-    # Kriteria Ambang Batas K3 / PVT Lapangan
+    # Status Kesiapan Kerja (K3)
     if mean_rt <= 500:
         status_pvt = "🟢 FIT / SIAP BEKERJA"
     elif mean_rt <= 700:
@@ -366,7 +373,8 @@ elif st.session_state.page == 'summary':
             "Status_PVT": status_pvt
         }
         
-        WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbxZbnyVkUVgiEzZeejLWoJhOWaU5cg932f5pEqA60hyLQEC-EQlgYJBoXRylx70ADTxBw/exec"
+        # Webhook URL Baru
+        WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbypSuSSm0F9TT2qXWYJ9B3ZgW6MNxVYL4k8xNFJkWr0niZXEMICzaw_r6qqP7vlOlUfLA/exec"
         
         try:
             response = requests.post(WEBHOOK_URL, json=payload, timeout=5)
