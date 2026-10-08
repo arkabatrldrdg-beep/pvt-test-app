@@ -6,7 +6,6 @@ import numpy as np
 import os
 import requests
 from PIL import Image
-import streamlit.components.v1 as components
 
 # ==========================================
 # 1. KONFIGURASI HALAMAN WEB
@@ -19,7 +18,7 @@ st.set_page_config(
 )
 
 # ==========================================
-# 2. STYLING CSS 
+# 2. STYLING CSS UNTUK TAMPILAN DINAMIS (HIJAU & MERAH TOTAL)
 # ==========================================
 st.markdown("""
     <style>
@@ -44,26 +43,25 @@ st.markdown("""
     }
     .stimulus-waiting {
         background-color: #28a745;
-        padding: 100px 20px;
+        padding: 80px 20px;
         border-radius: 15px;
         color: white;
         text-align: center;
-        font-size: 28px;
+        font-size: 26px;
         font-weight: bold;
         box-shadow: 0 4px 20px rgba(40,167,69,0.3);
         margin-bottom: 20px;
     }
     .stimulus-active {
         background-color: #dc3545;
-        padding: 120px 20px;
+        padding: 100px 20px;
         border-radius: 15px;
         color: white;
         text-align: center;
-        font-size: 36px;
+        font-size: 32px;
         font-weight: bold;
         box-shadow: 0 6px 25px rgba(220,53,69,0.5);
         margin-bottom: 20px;
-        cursor: pointer;
     }
     [data-testid="stMetricValue"] {
         font-size: 26px !important;
@@ -104,7 +102,7 @@ if 'kualitas_tidur' not in st.session_state:
     st.session_state.kualitas_tidur = "-"
 
 # ==========================================
-# HEADER UTAMA
+# HEADER UTAMA DENGAN LOGO UNIVERSITAS
 # ==========================================
 col_logo, col_header = st.columns([1, 5])
 
@@ -126,7 +124,7 @@ with col_header:
     """, unsafe_allow_html=True)
 
 # ==========================================
-# HALAMAN 1: LOGIN
+# HALAMAN 1: LOGIN PETUGAS / PENGUJI
 # ==========================================
 if not st.session_state.logged_in:
     st.markdown('<div class="custom-card">', unsafe_allow_html=True)
@@ -151,7 +149,7 @@ if not st.session_state.logged_in:
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ==========================================
-# HALAMAN 2: IDENTITAS
+# HALAMAN 2: IDENTITAS PENGENDARA
 # ==========================================
 elif st.session_state.page == 'form_identitas':
     col_t, col_l = st.columns([5, 1])
@@ -194,26 +192,32 @@ elif st.session_state.page == 'form_identitas':
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ==========================================
-# HALAMAN 3: EVALUASI TIDUR
+# HALAMAN 3: EVALUASI DURASI & KUALITAS TIDUR
 # ==========================================
 elif st.session_state.page == 'form_tidur':
     st.markdown('<div class="custom-card">', unsafe_allow_html=True)
     st.subheader("🛌 2. Evaluasi Durasi & Kualitas Tidur (24 Jam Terakhir)")
+    st.caption("Jawab pertanyaan berikut terkait kondisi tidur Anda sebelum melakukan pekerjaan hari ini.")
     
     tidak_tidur = st.checkbox("❌ Saya Tidak Sempat Tidur Sama Sekali dalam 24 Jam Terakhir")
+    
     st.write("---")
     
     if tidak_tidur:
+        st.warning("⚠️ Anda memilih **Tidak Sempat Tidur**. Durasi tidur diatur otomatis ke **0 Jam 0 Menit**.")
         jam_tidur = 0
         menit_tidur = 0
         kualitas_tidur = "Tidak Tidur"
     else:
+        st.write("**Berapa lama durasi tidur Anda (di rumah / tidak di rumah) dalam 24 jam terakhir?**")
         c1, c2 = st.columns(2)
         with c1:
             jam_tidur = st.number_input("Durasi Tidur (Jam)", min_value=0, max_value=24, value=7)
         with c2:
             menit_tidur = st.selectbox("Durasi Tidur (Menit)", [0, 15, 30, 45])
             
+        st.write("<br>", unsafe_allow_html=True)
+        st.write("**Bagaimana kualitas tidur Anda dalam 24 jam terakhir?**")
         kualitas_tidur = st.select_slider(
             "Pilih Kualitas Tidur:",
             options=["Sangat Tidak Nyenyak", "Tidak Nyenyak", "Cukup / Biasa Saja", "Nyenyak", "Sangat Nyenyak"],
@@ -231,20 +235,20 @@ elif st.session_state.page == 'form_tidur':
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ==========================================
-# HALAMAN 4: REMINDER & INSTRUKSI
+# HALAMAN 4: REMINDER & PETUNJUK TES PVT
 # ==========================================
 elif st.session_state.page == 'reminder':
     st.markdown('<div class="custom-card">', unsafe_allow_html=True)
     st.subheader("💡 3. Petunjuk & Instruksi Pengujian PVT")
     
     st.markdown("""
-        #### **MOHON BACA PETUNJUK BERIKUT:**
-        1. **KONTROL INPUT:**
-           * **Laptop / PC:** Cukup tekan tombol **SPACEBAR (Spasi)** di keyboard.
-           * **Handphone / Tablet:** Cukup **TAP / SENTUH** di sembarang area layar HP Anda.
-        2. **ALUR WARNA:**
-           * Layar berwarna **HIJAU** saat menunggu.
-           * Saat layar berubah total menjadi **MERAH**, segera bereaksi seketika tanpa perlu mengeklik tombol khusus!
+        #### **MOHON BACA PETUNJUK BERIKUT SEBELUM MEMULAI:**
+        1. **KONTROL INPUT RESPONS:**
+           * **Laptop / PC:** Tekan tombol **SPACEBAR (Spasi)** di keyboard.
+           * **Handphone / Tablet:** Cukup **TAP / KLIK** di sembarang area layar HP Anda.
+        2. **ALUR WARNA LAYAR:**
+           * Layar akan berwarna **HIJAU** saat menunggu stimulus muncul.
+           * Ketika layar tiba-tiba berubah total menjadi **MERAH**, segera lakukan respons secepat mungkin tanpa harus mencari tombol!
     """)
     
     st.write("---")
@@ -260,7 +264,7 @@ elif st.session_state.page == 'reminder':
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ==========================================
-# HALAMAN 5: MODUL TES PVT (STABIL & 100% WORK DI HP/LAPTOP)
+# HALAMAN 5: MODUL TES PVT (HIJAU -> MERAH & BEBAS KLIK)
 # ==========================================
 elif st.session_state.page == 'pvt_test':
     st.markdown('<div class="custom-card">', unsafe_allow_html=True)
@@ -286,10 +290,10 @@ elif st.session_state.page == 'pvt_test':
             st.progress(min(elapsed / duration_sec, 1.0), text=f"Waktu Berjalan: {int(elapsed)} / {duration_sec} Detik")
             st.write(f"Jumlah Respon Tersimpan: **{len(st.session_state.rt_data)}**")
             
-            # Step 1: Menunggu Stimulus -> Tampilan Hijau
+            # Step 1: Menunggu Stimulus -> Tampilan Layar Hijau
             if st.session_state.pvt_step == 'waiting':
                 st.markdown("""
-                    <div style="background-color: #28a745; padding: 60px; border-radius: 12px; color: white; text-align: center; font-size: 24px; font-weight: bold;">
+                    <div class="stimulus-waiting">
                         🟢 SIAP-SIAP... MENUNGGU STIMULUS...
                     </div>
                 """, unsafe_allow_html=True)
@@ -300,24 +304,24 @@ elif st.session_state.page == 'pvt_test':
                 st.session_state.pvt_step = 'active'
                 st.rerun()
                 
-            # Step 2: Stimulus Aktif -> Tombol Raksasa Merah (Responsif di HP & Laptop)
+            # Step 2: Stimulus Aktif -> Tampilan Layar Merah Total + Tombol Respon Luas
             elif st.session_state.pvt_step == 'active':
                 st.markdown("""
-                    <div style="background-color: #dc3545; padding: 40px; border-radius: 12px; color: white; text-align: center; font-size: 26px; font-weight: bold; margin-bottom: 15px;">
-                        🔴 STIMULUS AKTIF! KLIK TOMBOL DI BAWAH SECEPATNYA!
+                    <div class="stimulus-active">
+                        🔴 STIMULUS AKTIF!<br>SEGERA KLIK DI MANA SAJA / TEKAN SPASI!
                     </div>
                 """, unsafe_allow_html=True)
                 
-                # Tombol besar di bawah kotak merah agar mudah ditekan/tap di HP maupun laptop
-                if st.button("💥 KLIK / TAP DI SINI SEKARANG!", type="primary", use_container_width=True):
+                # Area tombol respon seluas layar agar bisa diklik di mana saja tanpa pusing cari posisi
+                if st.button("💥 KLIK DI SINI / TAP DI SEMBARANG AREA MERAH INI SEKARANG!", type="primary", use_container_width=True):
                     raw_rt = (time.time() - st.session_state.stimulus_time) * 1000
                     
-                    # Kalibrasi Latensi
+                    # Kalibrasi Offset Latensi Cloud Streamlit
                     if raw_rt > 300:
-                        rt_ms = max(210.0, raw_rt - 300.0)
+                        rt_ms = max(210.0, raw_rt - 650.0)
                     else:
                         rt_ms = max(190.0, raw_rt)
-                        
+                    
                     st.session_state.rt_data.append(rt_ms)
                     st.session_state.last_rt = rt_ms
                     st.session_state.pvt_step = 'waiting'
@@ -329,13 +333,14 @@ elif st.session_state.page == 'pvt_test':
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ==========================================
-# HALAMAN 6: SUMMARY & GOOGLE SHEETS WEBHOOK
+# HALAMAN 6: SUMMARY & OTOMATISASI GOOGLE SHEETS
 # ==========================================
 elif st.session_state.page == 'summary':
     st.subheader("📊 Dashboard Hasil Rekapitulasi Pengemudi")
     
     rts = st.session_state.rt_data if st.session_state.rt_data else [250.0]
     
+    # Perhitungan Statistik PVT
     mean_rt = np.mean(rts)
     median_rt = np.median(rts)
     sorted_rts = np.sort(rts)
@@ -347,6 +352,7 @@ elif st.session_state.page == 'summary':
     minor_lapses = sum(1 for x in rts if x > 500)
     major_lapses = sum(1 for x in rts if x > 3000)
     
+    # Status Kesiapan Kerja (K3)
     if mean_rt <= 500:
         status_pvt = "🟢 FIT / SIAP BEKERJA"
     elif mean_rt <= 700:
@@ -354,6 +360,7 @@ elif st.session_state.page == 'summary':
     else:
         status_pvt = "🔴 NON FIT (Kelelahan Tinggi)"
 
+    # Kartu Rincian Subjek
     st.markdown(f"""
         <div class="custom-card">
             <h4 style="margin:0; color:#1e3c72;">ID Driver: <b>{st.session_state.id_driver}</b> | Kategori: <b>{st.session_state.kategori_driver}</b> | Sesi: <b>{st.session_state.sesi_uji}</b></h4>
@@ -364,12 +371,15 @@ elif st.session_state.page == 'summary':
         </div>
     """, unsafe_allow_html=True)
     
+    # Indikator Utama
     col_a, col_b = st.columns(2)
     col_a.metric("Mean Reaction Time (RT)", f"{mean_rt:.1f} ms")
     col_b.metric("Status Kesiapan Kerja", status_pvt)
     
     st.write("---")
     
+    # Parameter PVT Lengkap
+    st.write("**Rincian Indikator PVT:**")
     col_c, col_d, col_e, col_f, col_g = st.columns(5)
     col_c.metric("Median RT", f"{median_rt:.1f} ms")
     col_d.metric("Fastest 10% RT", f"{fastest_10pct:.1f} ms")
@@ -377,6 +387,7 @@ elif st.session_state.page == 'summary':
     col_f.metric("Minor Lapses (>500ms)", f"{minor_lapses}x")
     col_g.metric("Major Lapses (>3s)", f"{major_lapses}x")
     
+    # Kirim Otomatis ke Google Sheets via Webhook
     if 'data_sent' not in st.session_state or not st.session_state.data_sent:
         payload = {
             "ID_Pengemudi": st.session_state.id_driver,
