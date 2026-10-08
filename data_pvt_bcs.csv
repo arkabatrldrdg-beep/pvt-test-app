@@ -1,0 +1,4 @@
+ID_Pengemudi,Kategori_Driver,Usia,Masa_Kerja_Thn,Durasi_Tidur_Jam,Kualitas_Tidur,Mean_RT_ms,Median_RT_ms,Fastest_10pct_ms,Slowest_10pct_ms,Minor_Lapses,Major_Lapses,Status_PVT
+LOG-001,Logistik Industri,35,3.0,8.0,Nyenyak,3.38,2.13,1.07,11.46,0,0,🟢 FIT / LAIK BEKERJA
+LOG-002,Logistik Industri,Sebelum Bekerja (Pre-Work),35,3.0,7.0,Nyenyak,1364.34,1269.16,980.22,2063.64,12,0,🔴 NON FIT (Kelelahan Tinggi)
+LOG-002,Logistik Industri,Sebelum Bekerja (Pre-Work),35,3.0,7.0,Nyenyak,1364.34,1269.16,980.22,2063.64,12,0,🔴 NON FIT (Kelelahan Tinggi)
