@@ -260,7 +260,7 @@ elif st.session_state.page == 'reminder':
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ==========================================
-# HALAMAN 5: MODUL TES PVT (MENGGUNAKAN JAVASCRIPT EVENT LISTENER)
+# HALAMAN 5: MODUL TES PVT (AUTO-FOCUS SPACEBAR & TAP)
 # ==========================================
 elif st.session_state.page == 'pvt_test':
     st.markdown('<div class="custom-card">', unsafe_allow_html=True)
@@ -300,11 +300,10 @@ elif st.session_state.page == 'pvt_test':
                 st.session_state.pvt_step = 'active'
                 st.rerun()
                 
-            # Step 2: Stimulus Aktif -> Kotak Merah Penuh & Deteksi Spasi/Tap Bebas via JS
+            # Step 2: Stimulus Aktif -> Kotak Merah Penuh (Auto-Focus Aktif)
             elif st.session_state.pvt_step == 'active':
-                # Menggunakan HTML Component untuk mendeteksi Tap layar HP atau Spacebar Laptop secara instan
-                response_val = components.html("""
-                    <div id="red-box" style="
+                components.html("""
+                    <div id="red-box" tabindex="0" style="
                         background-color: #dc3545; 
                         padding: 120px 20px; 
                         border-radius: 15px; 
@@ -314,6 +313,7 @@ elif st.session_state.page == 'pvt_test':
                         font-weight: bold;
                         box-shadow: 0 6px 25px rgba(220,53,69,0.5);
                         cursor: pointer;
+                        outline: none;
                         user-select: none;
                     ">
                         🔴 STIMULUS AKTIF!<br><span style="font-size:18px;">Tekan SPASI (Laptop) atau TAP di sini (HP)</span>
@@ -322,35 +322,31 @@ elif st.session_state.page == 'pvt_test':
                         const startTime = performance.now();
                         let responded = false;
 
+                        const box = document.getElementById('red-box');
+                        box.focus(); // Otomatis mengunci fokus agar keyboard langsung terbaca
+
                         function triggerResponse(e) {
-                            // Jika menekan tombol selain Spacebar di keyboard, abaikan
                             if (e.type === 'keydown' && e.code !== 'Space') return;
                             if (responded) return;
                             responded = true;
                             
                             const duration = performance.now() - startTime;
-                            // Kirim hasil waktu reaksi kembali ke Streamlit via query parameters atau komunikasi iframe
-                            const parentDoc = window.parent.document;
                             const url = new URL(window.parent.location.href);
                             url.searchParams.set('rt_captured', duration);
                             window.parent.location.href = url.toString();
                         }
 
                         window.addEventListener('keydown', triggerResponse);
-                        document.getElementById('red-box').addEventListener('click', triggerResponse);
-                        document.getElementById('red-box').addEventListener('touchstart', triggerResponse);
+                        box.addEventListener('click', triggerResponse);
+                        box.addEventListener('touchstart', triggerResponse);
                     </script>
                 """, height=300)
                 
-                # Cek apakah ada parameter respon yang masuk dari JavaScript
                 query_params = st.query_params
                 if "rt_captured" in query_params:
                     raw_rt = float(query_params["rt_captured"])
-                    
-                    # Bersihkan query param agar tidak looping
                     st.query_params.clear()
                     
-                    # Kalibrasi Latensi
                     if raw_rt > 300:
                         rt_ms = max(210.0, raw_rt - 100.0)
                     else:
