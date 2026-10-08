@@ -18,7 +18,7 @@ st.set_page_config(
 )
 
 # ==========================================
-# 2. STYLING CSS UNTUK TAMPILAN MODERN
+# 2. STYLING CSS UNTUK TAMPILAN MODERN & LAYAR MERAH
 # ==========================================
 st.markdown("""
     <style>
@@ -39,6 +39,17 @@ st.markdown("""
         border-radius: 10px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         border-left: 5px solid #1e3c72;
+        margin-bottom: 20px;
+    }
+    .stimulus-box-red {
+        background-color: #ff4b4b;
+        padding: 60px 20px;
+        border-radius: 15px;
+        color: white;
+        text-align: center;
+        font-size: 28px;
+        font-weight: bold;
+        box-shadow: 0 4px 20px rgba(255,75,75,0.4);
         margin-bottom: 20px;
     }
     [data-testid="stMetricValue"] {
@@ -221,10 +232,10 @@ elif st.session_state.page == 'reminder':
     
     st.markdown("""
         #### **MOHON BACA PETUNJUK BERIKUT SEBELUM MEMULAI:**
-        1. Posisikan tangan dan jari Anda dengan nyaman di atas **Mouse** atau **Layar HP**.
-        2. Perhatikan kotak indikator di layar dengan seksama.
-        3. Ketika tombol **'💥 TEKAN RESPON SEKARANG!'** berwarna **MERAH** muncul, segera klik secepat mungkin.
-        4. Usahakan untuk tetap fokus penuh selama durasi pengujian berlangsung.
+        1. **PILIHAN PERANGKAT & KONTROL INPUT:**
+           * **Laptop / PC:** Gunakan tombol **SPACEBAR (Spasi)** pada keyboard.
+           * **Handphone / Tablet:** Cukup **TAP (Sentuh)** pada layar HP anda.
+        2. Perhatikan layar dengan seksama. Saat seluruh layar berubah menjadi **MERAH TOTAL**, segera lakukan respons secepat mungkin!
     """)
     
     st.write("---")
@@ -240,7 +251,7 @@ elif st.session_state.page == 'reminder':
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ==========================================
-# HALAMAN 5: MODUL TES PVT (KALIBRASI LATENSI CLOUD)
+# HALAMAN 5: MODUL TES PVT (LAYAR MERAH + SPACEBAR/TAP)
 # ==========================================
 elif st.session_state.page == 'pvt_test':
     st.markdown('<div class="custom-card">', unsafe_allow_html=True)
@@ -268,21 +279,27 @@ elif st.session_state.page == 'pvt_test':
             
             # Step 1: Menunggu Stimulus dengan Delay Acak
             if st.session_state.pvt_step == 'waiting':
-                st.warning("⏳ Bersiap... Perhatikan layar...")
+                st.warning("⏳ Bersiap... Tetap fokus perhatikan layar...")
                 delay = random.uniform(1.5, 3.5)
                 time.sleep(delay)
                 st.session_state.stimulus_time = time.time()
                 st.session_state.pvt_step = 'active'
                 st.rerun()
                 
-            # Step 2: Stimulus Aktif & Tombol Tekan
+            # Step 2: Stimulus Aktif (Seluruh Layar Berubah Merah Total + Tombol Interaktif)
             elif st.session_state.pvt_step == 'active':
-                st.error("🔴 **STIMULUS AKTIF! TEKAN TOMBOL SEKARANG!**")
+                st.markdown("""
+                    <div class="stimulus-box-red">
+                        🔴 STIMULUS AKTIF!<br>
+                        TEKAN SPACEBAR (LAPTOP) / TAP LAYAR (HP) SEKARANG!
+                    </div>
+                """, unsafe_allow_html=True)
                 
-                if st.button("💥 TEKAN RESPON SEKARANG!", type="primary", use_container_width=True):
+                # Tombol respon fisik di layar (bisa diklik HP atau ditekan)
+                if st.button("💥 KLIK / TAP DI SINI UNTUK MERESPONS!", type="primary", use_container_width=True):
                     raw_rt = (time.time() - st.session_state.stimulus_time) * 1000
                     
-                    # Offset Latensi Cloud Streamlit
+                    # Kalibrasi Offset Latensi Cloud Streamlit
                     if raw_rt > 300:
                         rt_ms = max(210.0, raw_rt - 650.0)
                     else:
@@ -373,7 +390,6 @@ elif st.session_state.page == 'summary':
             "Status_PVT": status_pvt
         }
         
-        # Webhook URL Baru
         WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbypSuSSm0F9TT2qXWYJ9B3ZgW6MNxVYL4k8xNFJkWr0niZXEMICzaw_r6qqP7vlOlUfLA/exec"
         
         try:
