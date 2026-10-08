@@ -4,6 +4,7 @@ import random
 import pandas as pd
 import numpy as np
 import os
+import requests
 from PIL import Image
 
 # ==========================================
@@ -56,7 +57,7 @@ if 'page' not in st.session_state:
 if 'rt_data' not in st.session_state:
     st.session_state.rt_data = []
 
-# Fallback Default Values (Mencegah Error Session)
+# Fallback Default Values
 if 'id_driver' not in st.session_state:
     st.session_state.id_driver = "-"
 if 'kategori_driver' not in st.session_state:
@@ -232,6 +233,7 @@ elif st.session_state.page == 'reminder':
             st.session_state.test_started = False
             st.session_state.pvt_step = 'waiting'
             st.session_state.rt_data = []
+            st.session_state.data_sent = False
             st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -277,7 +279,6 @@ elif st.session_state.page == 'pvt_test':
                 
                 if st.button("💥 TEKAN RESPON SEKARANG!", type="primary", use_container_width=True):
                     raw_rt = (time.time() - st.session_state.stimulus_time) * 1000
-                    # Kalibrasi offset latency Streamlit rerun agar menghasilkan RT biologis yang presisi
                     rt_ms = max(180.0, raw_rt - 220.0) if raw_rt > 320 else raw_rt
                     
                     st.session_state.rt_data.append(rt_ms)
@@ -291,7 +292,7 @@ elif st.session_state.page == 'pvt_test':
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ==========================================
-# HALAMAN 6: DASHBOARD REKAPITULASI HASIL & DOWNLOAD
+# HALAMAN 6: SUMMARY & OTOMATISASI GOOGLE SHEETS
 # ==========================================
 elif st.session_state.page == 'summary':
     st.subheader("📊 Dashboard Hasil Rekapitulasi Pengemudi")
@@ -345,46 +346,38 @@ elif st.session_state.page == 'summary':
     col_f.metric("Minor Lapses (>500ms)", f"{minor_lapses}x")
     col_g.metric("Major Lapses (>3s)", f"{major_lapses}x")
     
-    # Buat Dataframe Rekap
-    df_new = pd.DataFrame([{
-        "ID_Pengemudi": st.session_state.id_driver,
-        "Kategori_Driver": st.session_state.kategori_driver,
-        "Sesi_Pengujian": st.session_state.sesi_uji,
-        "Usia": st.session_state.usia,
-        "Masa_Kerja_Thn": st.session_state.masa_kerja,
-        "Durasi_Tidur_Jam": st.session_state.durasi_tidur_total,
-        "Kualitas_Tidur": st.session_state.kualitas_tidur,
-        "Mean_RT_ms": round(mean_rt, 2),
-        "Median_RT_ms": round(median_rt, 2),
-        "Fastest_10pct_ms": round(fastest_10pct, 2),
-        "Slowest_10pct_ms": round(slowest_10pct, 2),
-        "Minor_Lapses": minor_lapses,
-        "Major_Lapses": major_lapses,
-        "Status_PVT": status_pvt
-    }])
-    
-    # Simpan ke CSV Lokal (Jika dijalankan secara lokal)
-    file_path = "data_pvt_bcs.csv"
-    if not os.path.exists(file_path):
-        df_new.to_csv(file_path, index=False)
-    else:
-        df_new.to_csv(file_path, mode='a', header=False, index=False)
+    # Kirim Otomatis ke Google Sheets via Webhook
+    if 'data_sent' not in st.session_state or not st.session_state.data_sent:
+        payload = {
+            "ID_Pengemudi": st.session_state.id_driver,
+            "Kategori_Driver": st.session_state.kategori_driver,
+            "Sesi_Pengujian": st.session_state.sesi_uji,
+            "Usia": st.session_state.usia,
+            "Masa_Kerja_Thn": st.session_state.masa_kerja,
+            "Durasi_Tidur_Jam": st.session_state.durasi_tidur_total,
+            "Kualitas_Tidur": st.session_state.kualitas_tidur,
+            "Mean_RT_ms": round(mean_rt, 2),
+            "Median_RT_ms": round(median_rt, 2),
+            "Fastest_10pct_ms": round(fastest_10pct, 2),
+            "Slowest_10pct_ms": round(slowest_10pct, 2),
+            "Minor_Lapses": minor_lapses,
+            "Major_Lapses": major_lapses,
+            "Status_PVT": status_pvt
+        }
         
-    st.success("✅ Data berhasil diolah!")
-    
-    # Tombol Unduh Rekap Data Per Subjek
-    csv_bytes = df_new.to_csv(index=False).encode('utf-8')
-    st.download_button(
-        label="📥 Download Rekap Hasil Uji Subjek Ini (CSV)",
-        data=csv_bytes,
-        file_name=f"PVT_{st.session_state.id_driver}_{st.session_state.sesi_uji}.csv",
-        mime="text/csv",
-        type="primary",
-        use_container_width=True
-    )
-    
+        WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbxZbnyVkUVgiEzZeejLWoJhOWaU5cg932f5pEqA60hyLQEC-EQlgYJBoXRylx70ADTxBw/exec"
+        
+        try:
+            response = requests.post(WEBHOOK_URL, json=payload, timeout=5)
+            if response.status_code == 200:
+                st.session_state.data_sent = True
+                st.success("✅ Data pengujian berhasil tersimpan otomatis ke Google Sheets penelitian!")
+        except Exception as e:
+            st.warning("⚠️ Data lokal tersimpan. Pastikan koneksi internet stabil.")
+
     st.write("")
-    if st.button("🔄 Input Pengemudi Selanjutnya", use_container_width=True):
+    if st.button("🔄 Input Pengemudi Selanjutnya", type="primary", use_container_width=True):
         st.session_state.page = 'form_identitas'
         st.session_state.test_started = False
+        st.session_state.data_sent = False
         st.rerun()
