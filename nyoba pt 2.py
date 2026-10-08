@@ -18,7 +18,7 @@ st.set_page_config(
 )
 
 # ==========================================
-# 2. STYLING CSS UNTUK TAMPILAN MODERN & LAYAR MERAH
+# 2. STYLING CSS UNTUK TAMPILAN DINAMIS (HIJAU & MERAH TOTAL)
 # ==========================================
 st.markdown("""
     <style>
@@ -41,15 +41,26 @@ st.markdown("""
         border-left: 5px solid #1e3c72;
         margin-bottom: 20px;
     }
-    .stimulus-box-red {
-        background-color: #ff4b4b;
-        padding: 60px 20px;
+    .stimulus-waiting {
+        background-color: #28a745;
+        padding: 80px 20px;
         border-radius: 15px;
         color: white;
         text-align: center;
-        font-size: 28px;
+        font-size: 26px;
         font-weight: bold;
-        box-shadow: 0 4px 20px rgba(255,75,75,0.4);
+        box-shadow: 0 4px 20px rgba(40,167,69,0.3);
+        margin-bottom: 20px;
+    }
+    .stimulus-active {
+        background-color: #dc3545;
+        padding: 100px 20px;
+        border-radius: 15px;
+        color: white;
+        text-align: center;
+        font-size: 32px;
+        font-weight: bold;
+        box-shadow: 0 6px 25px rgba(220,53,69,0.5);
         margin-bottom: 20px;
     }
     [data-testid="stMetricValue"] {
@@ -232,10 +243,12 @@ elif st.session_state.page == 'reminder':
     
     st.markdown("""
         #### **MOHON BACA PETUNJUK BERIKUT SEBELUM MEMULAI:**
-        1. **PILIHAN PERANGKAT & KONTROL INPUT:**
-           * **Laptop / PC:** Gunakan tombol **SPACEBAR (Spasi)** pada keyboard.
-           * **Handphone / Tablet:** Cukup **TAP (Sentuh)** pada layar HP anda.
-        2. Perhatikan layar dengan seksama. Saat seluruh layar berubah menjadi **MERAH TOTAL**, segera lakukan respons secepat mungkin!
+        1. **KONTROL INPUT RESPONS:**
+           * **Laptop / PC:** Tekan tombol **SPACEBAR (Spasi)** di keyboard.
+           * **Handphone / Tablet:** Cukup **TAP / KLIK** di sembarang area layar HP Anda.
+        2. **ALUR WARNA LAYAR:**
+           * Layar akan berwarna **HIJAU** saat menunggu stimulus muncul.
+           * Ketika layar tiba-tiba berubah total menjadi **MERAH**, segera lakukan respons secepat mungkin tanpa harus mencari tombol!
     """)
     
     st.write("---")
@@ -251,7 +264,7 @@ elif st.session_state.page == 'reminder':
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ==========================================
-# HALAMAN 5: MODUL TES PVT (LAYAR MERAH + SPACEBAR/TAP)
+# HALAMAN 5: MODUL TES PVT (HIJAU -> MERAH & BEBAS KLIK)
 # ==========================================
 elif st.session_state.page == 'pvt_test':
     st.markdown('<div class="custom-card">', unsafe_allow_html=True)
@@ -277,26 +290,30 @@ elif st.session_state.page == 'pvt_test':
             st.progress(min(elapsed / duration_sec, 1.0), text=f"Waktu Berjalan: {int(elapsed)} / {duration_sec} Detik")
             st.write(f"Jumlah Respon Tersimpan: **{len(st.session_state.rt_data)}**")
             
-            # Step 1: Menunggu Stimulus dengan Delay Acak
+            # Step 1: Menunggu Stimulus -> Tampilan Layar Hijau
             if st.session_state.pvt_step == 'waiting':
-                st.warning("⏳ Bersiap... Tetap fokus perhatikan layar...")
+                st.markdown("""
+                    <div class="stimulus-waiting">
+                        🟢 SIAP-SIAP... MENUNGGU STIMULUS...
+                    </div>
+                """, unsafe_allow_html=True)
+                
                 delay = random.uniform(1.5, 3.5)
                 time.sleep(delay)
                 st.session_state.stimulus_time = time.time()
                 st.session_state.pvt_step = 'active'
                 st.rerun()
                 
-            # Step 2: Stimulus Aktif (Seluruh Layar Berubah Merah Total + Tombol Interaktif)
+            # Step 2: Stimulus Aktif -> Tampilan Layar Merah Total + Tombol Respon Luas
             elif st.session_state.pvt_step == 'active':
                 st.markdown("""
-                    <div class="stimulus-box-red">
-                        🔴 STIMULUS AKTIF!<br>
-                        TEKAN SPACEBAR (LAPTOP) / TAP LAYAR (HP) SEKARANG!
+                    <div class="stimulus-active">
+                        🔴 STIMULUS AKTIF!<br>SEGERA KLIK DI MANA SAJA / TEKAN SPASI!
                     </div>
                 """, unsafe_allow_html=True)
                 
-                # Tombol respon fisik di layar (bisa diklik HP atau ditekan)
-                if st.button("💥 KLIK / TAP DI SINI UNTUK MERESPONS!", type="primary", use_container_width=True):
+                # Area tombol respon seluas layar agar bisa diklik di mana saja tanpa pusing cari posisi
+                if st.button("💥 KLIK DI SINI / TAP DI SEMBARANG AREA MERAH INI SEKARANG!", type="primary", use_container_width=True):
                     raw_rt = (time.time() - st.session_state.stimulus_time) * 1000
                     
                     # Kalibrasi Offset Latensi Cloud Streamlit
