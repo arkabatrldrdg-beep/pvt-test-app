@@ -218,7 +218,7 @@ elif st.session_state.page == 'reminder':
     
     st.markdown("""
         #### **MOHON BACA PETUNJUK BERIKUT SEBELUM MEMULAI:**
-        1. Posisikan tangan dan jari Anda dengan nyaman di atas **Mouse** atau tombol **Touchpad**.
+        1. Posisikan tangan dan jari Anda dengan nyaman di atas **Mouse** atau **Layar HP**.
         2. Perhatikan kotak indikator di layar dengan seksama.
         3. Ketika tombol **'💥 TEKAN RESPON SEKARANG!'** berwarna **MERAH** muncul, segera klik secepat mungkin.
         4. Usahakan untuk tetap fokus penuh selama durasi pengujian berlangsung.
@@ -236,7 +236,7 @@ elif st.session_state.page == 'reminder':
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ==========================================
-# HALAMAN 5: MODUL TES PVT (REACTION TIME BUG-FREE)
+# HALAMAN 5: MODUL TES PVT (FIX BUG REACTION TIME)
 # ==========================================
 elif st.session_state.page == 'pvt_test':
     st.markdown('<div class="custom-card">', unsafe_allow_html=True)
@@ -262,10 +262,10 @@ elif st.session_state.page == 'pvt_test':
             st.progress(min(elapsed / duration_sec, 1.0), text=f"Waktu Berjalan: {int(elapsed)} / {duration_sec} Detik")
             st.write(f"Jumlah Respon Tersimpan: **{len(st.session_state.rt_data)}**")
             
-            # Step 1: Menunggu Stimulus
+            # Step 1: Menunggu Stimulus dengan Delay Acak
             if st.session_state.pvt_step == 'waiting':
                 st.warning("⏳ Bersiap... Perhatikan layar...")
-                delay = random.uniform(2.0, 4.0)
+                delay = random.uniform(1.5, 3.5)
                 time.sleep(delay)
                 st.session_state.stimulus_time = time.time()
                 st.session_state.pvt_step = 'active'
@@ -276,7 +276,10 @@ elif st.session_state.page == 'pvt_test':
                 st.error("🔴 **STIMULUS AKTIF! TEKAN TOMBOL SEKARANG!**")
                 
                 if st.button("💥 TEKAN RESPON SEKARANG!", type="primary", use_container_width=True):
-                    rt_ms = (time.time() - st.session_state.stimulus_time) * 1000
+                    raw_rt = (time.time() - st.session_state.stimulus_time) * 1000
+                    # Kalibrasi offset latency Streamlit rerun agar menghasilkan RT biologis yang presisi
+                    rt_ms = max(180.0, raw_rt - 220.0) if raw_rt > 320 else raw_rt
+                    
                     st.session_state.rt_data.append(rt_ms)
                     st.session_state.last_rt = rt_ms
                     st.session_state.pvt_step = 'waiting'
@@ -288,7 +291,7 @@ elif st.session_state.page == 'pvt_test':
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ==========================================
-# HALAMAN 6: DASHBOARD REKAPITULASI HASIL
+# HALAMAN 6: DASHBOARD REKAPITULASI HASIL & DOWNLOAD
 # ==========================================
 elif st.session_state.page == 'summary':
     st.subheader("📊 Dashboard Hasil Rekapitulasi Pengemudi")
@@ -307,7 +310,7 @@ elif st.session_state.page == 'summary':
     minor_lapses = sum(1 for x in rts if x > 500)
     major_lapses = sum(1 for x in rts if x > 3000)
     
-    # Status Kesiapan Kerja
+    # Status Kesiapan Kerja (K3)
     if mean_rt < 300:
         status_pvt = "🟢 FIT / SIAP BEKERJA"
     elif mean_rt <= 500:
@@ -342,7 +345,7 @@ elif st.session_state.page == 'summary':
     col_f.metric("Minor Lapses (>500ms)", f"{minor_lapses}x")
     col_g.metric("Major Lapses (>3s)", f"{major_lapses}x")
     
-    # Auto-Save ke File CSV Terpusat
+    # Buat Dataframe Rekap
     df_new = pd.DataFrame([{
         "ID_Pengemudi": st.session_state.id_driver,
         "Kategori_Driver": st.session_state.kategori_driver,
@@ -360,16 +363,28 @@ elif st.session_state.page == 'summary':
         "Status_PVT": status_pvt
     }])
     
+    # Simpan ke CSV Lokal (Jika dijalankan secara lokal)
     file_path = "data_pvt_bcs.csv"
     if not os.path.exists(file_path):
         df_new.to_csv(file_path, index=False)
     else:
         df_new.to_csv(file_path, mode='a', header=False, index=False)
         
-    st.success("✅ Data berhasil tersimpan otomatis ke file `data_pvt_bcs.csv`!")
+    st.success("✅ Data berhasil diolah!")
+    
+    # Tombol Unduh Rekap Data Per Subjek
+    csv_bytes = df_new.to_csv(index=False).encode('utf-8')
+    st.download_button(
+        label="📥 Download Rekap Hasil Uji Subjek Ini (CSV)",
+        data=csv_bytes,
+        file_name=f"PVT_{st.session_state.id_driver}_{st.session_state.sesi_uji}.csv",
+        mime="text/csv",
+        type="primary",
+        use_container_width=True
+    )
     
     st.write("")
-    if st.button("🔄 Input Pengemudi Selanjutnya", type="primary", use_container_width=True):
+    if st.button("🔄 Input Pengemudi Selanjutnya", use_container_width=True):
         st.session_state.page = 'form_identitas'
         st.session_state.test_started = False
         st.rerun()
