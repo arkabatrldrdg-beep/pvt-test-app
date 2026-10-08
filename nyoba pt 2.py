@@ -311,10 +311,10 @@ elif st.session_state.page == 'summary':
     minor_lapses = sum(1 for x in rts if x > 500)
     major_lapses = sum(1 for x in rts if x > 3000)
     
-    # Status Kesiapan Kerja (K3)
-    if mean_rt < 300:
+    # Kriteria Ambang Batas K3 / PVT Lapangan
+    if mean_rt <= 500:
         status_pvt = "🟢 FIT / SIAP BEKERJA"
-    elif mean_rt <= 500:
+    elif mean_rt <= 700:
         status_pvt = "🟡 CAUTION (Kelelahan Sedang)"
     else:
         status_pvt = "🔴 NON FIT (Kelelahan Tinggi)"
@@ -324,7 +324,7 @@ elif st.session_state.page == 'summary':
         <div class="custom-card">
             <h4 style="margin:0; color:#1e3c72;">ID Driver: <b>{st.session_state.id_driver}</b> | Kategori: <b>{st.session_state.kategori_driver}</b> | Sesi: <b>{st.session_state.sesi_uji}</b></h4>
             <p style="margin:5px 0 0 0; color:#555;">
-                Usia: {st.session_state.usia} Thn | Masa Kerja: {st.session_state.masa_kerja} Thn | 
+                Mode Tes: <b>{st.session_state.get('mode_tes', '-')}</b> | Usia: {st.session_state.usia} Thn | Masa Kerja: {st.session_state.masa_kerja} Thn | 
                 Durasi Tidur: {st.session_state.jam_tidur}j {st.session_state.menit_tidur}m ({st.session_state.durasi_tidur_total} Jam) | Kualitas Tidur: {st.session_state.kualitas_tidur}
             </p>
         </div>
@@ -352,6 +352,7 @@ elif st.session_state.page == 'summary':
             "ID_Pengemudi": st.session_state.id_driver,
             "Kategori_Driver": st.session_state.kategori_driver,
             "Sesi_Pengujian": st.session_state.sesi_uji,
+            "Mode_Tes": st.session_state.get('mode_tes', '-'),
             "Usia": st.session_state.usia,
             "Masa_Kerja_Thn": st.session_state.masa_kerja,
             "Durasi_Tidur_Jam": st.session_state.durasi_tidur_total,
