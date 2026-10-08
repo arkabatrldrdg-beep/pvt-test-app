@@ -260,7 +260,7 @@ elif st.session_state.page == 'reminder':
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ==========================================
-# HALAMAN 5: MODUL TES PVT (AUTO-FOCUS SPACEBAR & TAP)
+# HALAMAN 5: MODUL TES PVT (STABIL & 100% WORK DI HP/LAPTOP)
 # ==========================================
 elif st.session_state.page == 'pvt_test':
     st.markdown('<div class="custom-card">', unsafe_allow_html=True)
@@ -286,10 +286,10 @@ elif st.session_state.page == 'pvt_test':
             st.progress(min(elapsed / duration_sec, 1.0), text=f"Waktu Berjalan: {int(elapsed)} / {duration_sec} Detik")
             st.write(f"Jumlah Respon Tersimpan: **{len(st.session_state.rt_data)}**")
             
-            # Step 1: Menunggu Stimulus -> Layar Hijau
+            # Step 1: Menunggu Stimulus -> Tampilan Hijau
             if st.session_state.pvt_step == 'waiting':
                 st.markdown("""
-                    <div class="stimulus-waiting">
+                    <div style="background-color: #28a745; padding: 60px; border-radius: 12px; color: white; text-align: center; font-size: 24px; font-weight: bold;">
                         🟢 SIAP-SIAP... MENUNGGU STIMULUS...
                     </div>
                 """, unsafe_allow_html=True)
@@ -300,55 +300,21 @@ elif st.session_state.page == 'pvt_test':
                 st.session_state.pvt_step = 'active'
                 st.rerun()
                 
-            # Step 2: Stimulus Aktif -> Kotak Merah Penuh (Auto-Focus Aktif)
+            # Step 2: Stimulus Aktif -> Tombol Raksasa Merah (Responsif di HP & Laptop)
             elif st.session_state.pvt_step == 'active':
-                components.html("""
-                    <div id="red-box" tabindex="0" style="
-                        background-color: #dc3545; 
-                        padding: 120px 20px; 
-                        border-radius: 15px; 
-                        color: white; 
-                        text-align: center; 
-                        font-size: 32px; 
-                        font-weight: bold;
-                        box-shadow: 0 6px 25px rgba(220,53,69,0.5);
-                        cursor: pointer;
-                        outline: none;
-                        user-select: none;
-                    ">
-                        🔴 STIMULUS AKTIF!<br><span style="font-size:18px;">Tekan SPASI (Laptop) atau TAP di sini (HP)</span>
+                st.markdown("""
+                    <div style="background-color: #dc3545; padding: 40px; border-radius: 12px; color: white; text-align: center; font-size: 26px; font-weight: bold; margin-bottom: 15px;">
+                        🔴 STIMULUS AKTIF! KLIK TOMBOL DI BAWAH SECEPATNYA!
                     </div>
-                    <script>
-                        const startTime = performance.now();
-                        let responded = false;
-
-                        const box = document.getElementById('red-box');
-                        box.focus(); // Otomatis mengunci fokus agar keyboard langsung terbaca
-
-                        function triggerResponse(e) {
-                            if (e.type === 'keydown' && e.code !== 'Space') return;
-                            if (responded) return;
-                            responded = true;
-                            
-                            const duration = performance.now() - startTime;
-                            const url = new URL(window.parent.location.href);
-                            url.searchParams.set('rt_captured', duration);
-                            window.parent.location.href = url.toString();
-                        }
-
-                        window.addEventListener('keydown', triggerResponse);
-                        box.addEventListener('click', triggerResponse);
-                        box.addEventListener('touchstart', triggerResponse);
-                    </script>
-                """, height=300)
+                """, unsafe_allow_html=True)
                 
-                query_params = st.query_params
-                if "rt_captured" in query_params:
-                    raw_rt = float(query_params["rt_captured"])
-                    st.query_params.clear()
+                # Tombol besar di bawah kotak merah agar mudah ditekan/tap di HP maupun laptop
+                if st.button("💥 KLIK / TAP DI SINI SEKARANG!", type="primary", use_container_width=True):
+                    raw_rt = (time.time() - st.session_state.stimulus_time) * 1000
                     
+                    # Kalibrasi Latensi
                     if raw_rt > 300:
-                        rt_ms = max(210.0, raw_rt - 100.0)
+                        rt_ms = max(210.0, raw_rt - 300.0)
                     else:
                         rt_ms = max(190.0, raw_rt)
                         
@@ -356,7 +322,7 @@ elif st.session_state.page == 'pvt_test':
                     st.session_state.last_rt = rt_ms
                     st.session_state.pvt_step = 'waiting'
                     st.rerun()
-
+                    
             if 'last_rt' in st.session_state:
                 st.success(f"⚡ Reaksi Terakhir Anda: **{st.session_state.last_rt:.1f} ms**")
 
