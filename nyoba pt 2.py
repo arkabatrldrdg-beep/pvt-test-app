@@ -383,7 +383,7 @@ elif st.session_state.page == 'summary':
             "Status_PVT": status_pvt
         }
         
-        WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbypSuSSm0F9TT2qXWYJ9B3ZgW6MNxVYL4k8xNFJkWr0niZXEMICzaw_r6qqP7vlOlUfLA/exec"
+        WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbxxbkEA4OKN2i4NGi2-Kx3JwpcTUWFMuaL111HI5WJU-YQcKoTaR2Rs_S9_WwBSW2i_Nw/exec"
         
         try:
             response = requests.post(WEBHOOK_URL, json=payload, timeout=5)
